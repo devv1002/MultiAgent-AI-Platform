@@ -40,7 +40,7 @@ function Home() {
                 <h2 className='text-[17px] font-semibold text-slate-100 tracking-tight'>Welcome to CortexAI</h2>
                 <p className='text-[13px] text-slate-500'>Please login to continue using the app.</p>
             </div>
-            <button>
+            <button className=''>
                 <FcGoogle size={15} className='text-white'/>
                 Continue with Google
             </button>
