@@ -39,12 +39,15 @@ export const login = async (req, res) => {
 
         return res.status(200).json(user);
 
-    } catch (error) {
+    }catch (error) {
+        console.error("LOGIN ERROR:", error);
+    
         return res.status(500).json({
-            message: `login error ${error}`
+            message: error.message,
+            stack: error.stack
         });
     }
-};
+}
 
 export const logOut = async (req,res) => {
     try {
