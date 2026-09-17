@@ -7,29 +7,42 @@ import { FcGoogle } from "react-icons/fc";
 
 function Home() {
     const handleLogin = async (token) => {
-        try {
-          const {data} = await api.post("/api/auth/login", {token})
-          console.log(data)
-        } catch (error) {
-          console.log(error)
-        }
+      console.log("1. handleLogin called");
+
+      try {
+          console.log("2. Sending request to backend");
+
+          const { data } = await api.post("/api/auth/login", { token });
+
+          console.log("3. Backend response:", data);
+      } catch (error) {
+          console.log("4. Backend login error:", error);
       }
-    
-      const googleLogin = async () => {
-        try {
-          const data = await signInWithPopup(auth, googleProvider)
-      
-          const token = await data.user.getIdToken()
-      
-          console.log("Firebase token:", token)
-      
-          await handleLogin(token)
-      
-          console.log("Google login successful:", data)
-        } catch (error) {
-          console.error("Google login failed:", error.code, error.message)
-        }
+  };
+
+  const googleLogin = async () => {
+      try {
+          console.log("A. Google login started");
+
+          const data = await signInWithPopup(auth, googleProvider);
+
+          console.log("B. Firebase popup successful");
+
+          const token = await data.user.getIdToken();
+
+          console.log("C. Firebase token received");
+
+          await handleLogin(token);
+
+          console.log("D. Google login successful:", data);
+      } catch (error) {
+          console.error(
+              "Google login failed:",
+              error.code,
+              error.message
+          );
       }
+  };
   return (
     <div className="h-screen flex bg-[#0d0f14] text-white overflow-hidden">
         <h1>Hello World</h1>
