@@ -19,10 +19,8 @@ app.use(cors({
 
 app.use(cookieParser())
 //middleware for GATEWAY & SERVICES Connection
-app.use("/auth", proxy(process.env.AUTH_SERVICE))
-
-
-app.get("/me",protect,getCurrentUser)
+app.use("/api/auth", proxy(process.env.AUTH_SERVICE))
+app.get("/api/me",protect,getCurrentUser)
 app.get("/",(req,res) => {
     res.json({message: "Hello from gateway"})
 })
