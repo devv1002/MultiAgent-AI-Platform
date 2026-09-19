@@ -17,7 +17,7 @@ function Home() {
       console.log("1. handleLogin called");
 
       try {
-          console.log("2. Sending request to backend");
+          console.log();
 
           const { data } = await api.post("/api/auth/login", { token });
 
