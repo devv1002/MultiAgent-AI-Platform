@@ -4,6 +4,7 @@ import dotenv from "dotenv"
 dotenv.config()
 import cors from "cors"
 import cookieParser from "cookie-parser";
+import { proxyWithHeader } from "./utils/proxyWithHeader.js"
 
 import { getCurrentUser } from "./controllers/user.controller.js"
 import protect from "./middleware/auth.middleware.js"
