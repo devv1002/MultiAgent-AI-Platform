@@ -22,6 +22,7 @@ app.use(cookieParser())
 //middleware for GATEWAY & SERVICES Connection
 app.use("/api/auth", proxy(process.env.AUTH_SERVICE))
 app.use("/api/chat",protect,proxyWithHeader(process.env.CHAT_SERVICE))
+app.use("/api/agent",protect,proxyWithHeader(process.env.AGENT_SERVICE))
 app.get("/api/me",protect,getCurrentUser)
 app.get("/",(req,res) => {
     res.json({message: "Hello from gateway"})
