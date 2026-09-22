@@ -1,5 +1,5 @@
 import { signInWithPopup } from 'firebase/auth'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { auth, googleProvider } from '../../utils/firebase'
 import api from '../../utils/axios'
 import { FcGoogle } from "react-icons/fc";
@@ -11,7 +11,38 @@ function Home() {
     const dispatch = useDispatch();
 
     const {userData} = useSelector(state=>state.user)
-    console.log(userData)
+
+    const [checkingAuth, setCheckingAuth] = useState(true);
+    
+    useEffect(() => {
+
+        const checkCurrentUser = async () => {
+
+            try {
+
+                console.log("Checking current user session...");
+
+                const { data } = await api.get("/api/me");
+
+                console.log("Current user:", data);
+
+                dispatch(setUserdata(data));
+
+            } catch (error) {
+
+                console.log("No active session");
+
+            } finally {
+
+                setCheckingAuth(false);
+
+            }
+
+        };
+
+        checkCurrentUser();
+
+    }, [dispatch]);
 
     const handleLogin = async (token) => {
       console.log("1. handleLogin called");
@@ -55,7 +86,7 @@ function Home() {
   return (
     <div className="h-screen flex bg-[#0d0f14] text-white overflow-hidden">
 
-        {!userData && <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm'>
+        {!checkingAuth && !userData && <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm'>
 
             <div className='w-85 bg-[#13151c] border border-white/8 rounded-2xl p-7 flex flex-col gap-5'>
                 <div className='flex flex-col gap-1'>

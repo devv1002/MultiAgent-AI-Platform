@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { getAuth } from "firebase-admin/auth";
 import { app } from "../config/firebase.js";
 import User from "../models/user.model.js";
