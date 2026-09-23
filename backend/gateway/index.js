@@ -8,6 +8,7 @@ import { proxyWithHeader } from "./utils/proxyWithHeader.js"
 
 import { getCurrentUser } from "./controllers/user.controller.js"
 import protect from "./middleware/auth.middleware.js"
+import morgan from "morgan"
 
 const port = process.env.PORT;
 
@@ -17,6 +18,7 @@ app.use(cors({
     origin:process.env.FRONTEND_URL,
     credentials:true
 }))
+app.use(morgan("dev"))
 
 app.use(cookieParser())
 //middleware for GATEWAY & SERVICES Connection

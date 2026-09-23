@@ -32,7 +32,7 @@ function SideBar() {
 
   if (collapsed) {
     return (
-      <div className='hidden lg:flex flex-col items-center w-[56px] h-screen bg-[#0d0f14] border-r border-white/[0.06] py-4 gap-1 shrink-0'>
+      <div className='flex flex-col items-center w-[56px] h-screen bg-[#0d0f14] border-r border-white/[0.06] py-4 gap-1 shrink-0'>
         <button className='flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/[0.05] transition-colors duration-150 bg-transparent border-none cursor-pointer mb-1'
           onClick={() => setCollapsed(false)}
         >
@@ -65,7 +65,7 @@ function SideBar() {
 
         </div>
 
-        <div className='"relative shrink-0'>
+        <div className='relative shrink-0'>
           {
             (userData?.avatar && !imageError)
               ?
@@ -93,11 +93,12 @@ function SideBar() {
 
       <div className='flex flex-col h-full'>
         <div className='flex items-center gap-2.5 px-4 py-4 border-b border-white/6'>
-          <div className='hidden lg:flex items-center justify-center w-7 h-7 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/[0.05] transition-colors duration-150 bg-transparent border-none cursor-pointer'
+          <button
+            className='flex items-center justify-center w-7 h-7 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/[0.05] transition-colors duration-150 bg-transparent border-none cursor-pointer'
             onClick={() => setCollapsed(true)}
           >
-            <PanelLeftIcon />
-          </div>
+            <PanelLeftIcon size={18} />
+          </button>
           <span className='text-[16px] font-semibold text-slate-100 tracking-tight flex-1'>
             CortexAI
           </span>
