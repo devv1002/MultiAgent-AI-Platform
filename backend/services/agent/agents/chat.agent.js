@@ -8,7 +8,43 @@ export const chatAgent = async (state) => {
 
     const history = await getMemory(state.conversationId)
 
-    const systemPrompt =`You are CortexAI, an intelligent AI assistant.
+const searchResults = Array.isArray(state.searchResults)
+    ? state.searchResults
+    : state.searchResults?.results ?? []
+
+const searchContext = searchResults.length
+    ? `
+Web Search Results:
+
+${JSON.stringify(
+    searchResults.map(result => ({
+        title: result.title,
+        url: result.url,
+        content: result.content
+    })),
+    null,
+    2
+)}
+
+Answer the user using only the above search results.
+`
+    : ""
+
+
+
+    const systemPrompt = `
+    You are CortexAI, an intelligent AI assistant.
+
+    ${searchContext}
+
+    If searchContext exists:
+    
+    - Use search results to answer.
+    - Do not mention internal tools.
+    - When using web search results, include a "Sources" section at the end.
+    - In the Sources section, provide the relevant source links as Markdown links.
+    - Use this format: [Source title](URL)
+    - Do not hide or omit the URLs.
 
     Rules:
 - For simple questions, greetings, and short queries, respond naturally in plain text.
@@ -50,5 +86,5 @@ export const chatAgent = async (state) => {
         ...state,
         aiResponse: response.content
     }
-   
+
 }
