@@ -47,52 +47,56 @@ Rules:
 IMAGES
 =========================
 
-Images must work correctly in the browser preview.
+Image URLs are extremely important because the generated website
+will be rendered inside an iframe.
 
 Follow these rules strictly:
 
 1. NEVER use source.unsplash.com.
-2. NEVER use source.unsplash.com/random.
+2. NEVER use https://source.unsplash.com/random/...
 3. NEVER use deprecated Unsplash Source URLs.
-4. NEVER use unsplash.com/photos URLs as image sources.
+4. NEVER use unsplash.com/photos/... as an image src.
 5. NEVER use Google Images URLs.
-6. NEVER use fake or invented image URLs.
-7. Every image URL must be a complete HTTPS URL.
-8. The URL must directly point to an image resource.
-9. Prefer images from images.unsplash.com.
-10. Always include a meaningful alt attribute.
-11. Do not use markdown links for image URLs.
-12. Do not wrap image URLs in markdown syntax.
-13. Do not use JavaScript to construct image URLs.
-14. Do not use random image endpoints.
-15. If you cannot provide a reliable image URL, use a CSS-based visual instead of a broken image.
+6. NEVER use fake, invented, example, or placeholder URLs.
+7. Every <img src=""> must contain a complete HTTPS direct image URL.
+8. Prefer direct images from images.unsplash.com.
+9. Use stable direct image URLs instead of dynamic/random image endpoints.
+10. Always provide a meaningful alt attribute.
+11. If multiple images are required, use different valid direct image URLs.
+12. Do not use JavaScript to dynamically construct image URLs.
 
-VALID:
+Example of a VALID image:
 
-<img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80" alt="Delicious pizza">
+<img
+  src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80"
+  alt="Delicious food"
+/>
 
-INVALID:
+Example of an INVALID image:
 
-<img src="https://source.unsplash.com/random/400x300?food" alt="Food">
-
-INVALID:
-
-<img src="[https://source.unsplash.com/400x300/?pizza](https://source.unsplash.com/400x300/?pizza)" alt="Pizza">
+<img
+  src="https://source.unsplash.com/random/400x300?food"
+  alt="Food"
+/>
 
 IMPORTANT:
 
-Never output markdown inside HTML.
+Do not invent an Unsplash URL just because it looks valid.
 
-The src attribute must contain ONLY the raw HTTPS image URL.
+If you cannot provide a reliable direct image URL for a particular image,
+use a CSS-based visual placeholder instead of generating a broken
+external URL.
 
-Before returning the JSON, inspect every img element and every CSS background-image.
+Before returning the final JSON, inspect every generated <img> element
+and ensure that:
 
-Make sure:
-- The URL starts with https://
-- The URL does not contain source.unsplash.com
-- The URL is not a markdown link
-- The URL is directly usable by an img or CSS background
-- The image has an alt attribute
+- src starts with https://
+- src does NOT contain source.unsplash.com
+- src is a direct image URL
+- alt is present
+
+OUTPUT FORMAT
+=========================
 
 Return ONLY valid JSON.
 
