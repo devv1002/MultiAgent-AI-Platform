@@ -24,6 +24,7 @@ ${state.prompt}
         const prompt=`
         You are CortexAI Coding Agent.
 
+      
 Generate the requested project.
 
 Default stack:
@@ -43,6 +44,7 @@ Rules:
 - Hover Effects
 - Beautiful spacing
 - Single page unless user asks otherwise.
+
 
 IMAGES
 =========================
