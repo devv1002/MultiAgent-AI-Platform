@@ -8,33 +8,32 @@ export const visionAgent=async (state) => {
 
     try {
          const llm=await getModel("image")
-    const res=await llm.invoke(`
-        You are an elite AI image prompt engineer.
+    const res = await llm.invoke(`
+You are an AI image prompt engineer.
 
-Convert the user request into a highly detailed image generation prompt.
+Convert the user's request into a concise but detailed image-generation prompt.
 
 Requirements:
-
+- Photorealistic
 - Cinematic lighting
 - Professional composition
-- Ultra realistic
 - High detail
-- Beautiful color palette
 - Sharp focus
-- 8K quality
-- Photorealistic
+- Natural colors
 - Depth of field
-- Professional photography
-- Stunning visuals
+
+Keep the final prompt under 500 characters.
 
 Return only the image prompt.
 
 User Request:
 ${state.prompt}
-
-        `)
+`)
 
 const prompt=res.content.trim()
+
+console.log("IMAGE PROMPT LENGTH:", prompt.length)
+console.log("IMAGE PROMPT:", prompt)
 
 const imageUrl=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`
 
