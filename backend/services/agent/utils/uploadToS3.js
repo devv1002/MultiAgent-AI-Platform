@@ -11,6 +11,5 @@ export const uploadToS3=async (filename,buffer,contentType)=>{
     })
 
  )
-
  return filename
 }
