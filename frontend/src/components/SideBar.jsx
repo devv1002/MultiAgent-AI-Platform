@@ -10,6 +10,8 @@ import { clearMessages } from "../redux/messageSlice"
 import { addConversation, setConversations, setSelectedConversation } from '../redux/conversationSlice'
 import logOut from '../features/logOut'
 import { setUserdata } from '../redux/userSlice'
+import BillingDrawer from './BillingDrawer'
+
 
 function SideBar() {
   const [collapsed, setCollapsed] = useState(false)
@@ -17,6 +19,7 @@ function SideBar() {
   const [imageError, setImageError] = useState(false)
   const { conversations, selectedConversation } = useSelector(state => state.conversation)
   const { userData } = useSelector(state => state.user)
+  const [showBilling,setShowBilling]=useState(false)
 
   useEffect(() => {
     const getConv = async () => {
@@ -222,6 +225,11 @@ function SideBar() {
 
 
       </div>
+
+      <BillingDrawer
+           open={showBilling}
+           onClose={()=>setShowBilling(false)}
+           />
     </div>
   )
 
