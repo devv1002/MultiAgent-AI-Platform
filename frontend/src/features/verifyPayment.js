@@ -6,7 +6,7 @@ export const verifyPayment=async (payload) => {
         console.log(data)
         return data
     } catch (error) {
-        console.log(error)
-        return []
+        console.log(error.response?.data || error.message)
+        throw error
     }
 }
