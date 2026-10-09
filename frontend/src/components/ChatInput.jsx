@@ -2,8 +2,8 @@ import { Code2, FileText, Globe, ImageIcon, MessageSquare, Mic, MicOff, Papercli
 import React, { useState } from 'react'
 import sendMessage from '../features/sendMessage'
 import { useDispatch, useSelector } from 'react-redux'
-import { addMessage } from '../redux/messageSlice'
-import { createConversation } from '../features/createConversation'
+import { addMessage , setIsLoading} from '../redux/messageSlice'
+import { createConversation} from '../features/createConversation'
 import { addConversation, setConvTitle, setSelectedConversation } from '../redux/conversationSlice'
 import { updateConversation } from '../features/updateConversation'
 import { useRef } from 'react'
@@ -13,13 +13,14 @@ function ChatInput() {
   const [value, setValue] = useState("")
   const [selectedAgent, setSelectedAgent] = useState("Auto")
   const { selectedConversation } = useSelector(state => state.conversation)
-  const { messages } = useSelector(state => state.message)
+  const { messages, isLoading } = useSelector(state => state.message)
   const [selectedFile, setSelectedFile] = useState(null)
   const fileRef = useRef(null)
 
   const dispatch = useDispatch()
 
   const handleSendMessage = async () => {
+    dispatch(setIsLoading(true))
     let conversation = selectedConversation
     if (!conversation) {
       const conv = await createConversation()
@@ -50,6 +51,7 @@ function ChatInput() {
     dispatch(addMessage({ role: "user", content: value.trim() }))
     setValue("")
     const data = await sendMessage(formData)
+    dispatch(setIsLoading(false))
     setSelectedFile(null)
     dispatch(addMessage({ role: "assistant", content: data?.aiResponse || data?.answer || "", images: data?.images || [] }))
     console.log(data)
