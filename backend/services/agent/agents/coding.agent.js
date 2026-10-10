@@ -2,6 +2,29 @@ import { checkAgentLimit } from "../config/agentLimit.js"
 import { getModel } from "../config/llmModels.js"
 import { deductCredits } from "../utils/deductCredits.js"
 
+// Converts model output to a plain string (handles string or array content)
+const extractText = (content) =>
+  typeof content === "string"
+    ? content
+    : Array.isArray(content)
+      ? content.map(c => c.text || "").join("")
+      : String(content ?? "")
+
+// Parses JSON even if the model wraps it in ```json fences or adds extra text
+const safeParseJSON = (raw) => {
+  let text = extractText(raw)
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim()
+
+  const start = text.indexOf("{")
+  const end = text.lastIndexOf("}")
+  if (start === -1 || end === -1) {
+    throw new Error("No JSON found in model output")
+  }
+  return JSON.parse(text.slice(start, end + 1))
+}
 
 export const codingAgent = async (state) => {
   try {
@@ -24,8 +47,8 @@ DOCUMENTATION
 User Request:
 ${state.prompt}
     `)
-    const intent=intentRes.content
-    if(intent=="CODE_GENERATION"){
+    const intent = extractText(intentRes.content).trim().toUpperCase()
+    if (intent.includes("CODE_GENERATION")) {
         const prompt=`
         You are CortexAI Coding Agent.
 
@@ -141,7 +164,7 @@ ${state.prompt}
 `
         const res=await llm.invoke(prompt)
         console.log(res)
-        const data=JSON.parse(res.content)
+        const data=safeParseJSON(res.content)
         await deductCredits(state.userId,"coding")
 
 

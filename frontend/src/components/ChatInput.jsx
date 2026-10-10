@@ -2,7 +2,7 @@ import { Code2, FileText, Globe, ImageIcon, MessageSquare, Mic, MicOff, Papercli
 import React, { useState } from 'react'
 import sendMessage from '../features/sendMessage'
 import { useDispatch, useSelector } from 'react-redux'
-import { addMessage , setIsLoading} from '../redux/messageSlice'
+import { addMessage , setIsLoading, setArtifacts} from '../redux/messageSlice'
 import { createConversation} from '../features/createConversation'
 import { addConversation, setConvTitle, setSelectedConversation } from '../redux/conversationSlice'
 import { updateConversation } from '../features/updateConversation'
@@ -53,7 +53,8 @@ function ChatInput() {
     const data = await sendMessage(formData)
     dispatch(setIsLoading(false))
     setSelectedFile(null)
-    dispatch(addMessage({ role: "assistant", content: data?.aiResponse || data?.answer || "", images: data?.images || [] }))
+    dispatch(setArtifacts(data.artifacts || []))
+    dispatch(addMessage({ role: "assistant", content: data?.aiResponse || data?.answer || "", images: data?.images || [], artifacts: data?.artifacts || [] }))
     console.log(data)
   }
 
@@ -198,7 +199,7 @@ function ChatInput() {
             </button>
           </div>
           <button
-            disabled={!value && isLoading}
+            disabled={!value || isLoading}
             onClick={handleSendMessage}
             className={`flex items-center justify-center w-8 h-8 rounded-lg border-none cursor-pointer transition-all duration-150 ${value.trim() ? "bg-linear-to-br from-indigo-500 to-violet-700 hover:opacity-90 text-white" : "bg-white/[0.05] text-slate-600 cursor-not-allowed"}`}>
             <Send size={15} />

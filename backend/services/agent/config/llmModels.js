@@ -14,10 +14,12 @@ const gemini = new ChatGoogleGenerativeAI({
     temperature: 0
 })
 
-const openrouter=new ChatOpenRouter({
-    model:"deepseek/deepseek-chat",
-    temperature:0,
-    maxTokens:2500
+const openrouter = new ChatOpenRouter({
+    model: "deepseek/deepseek-chat",
+    temperature: 0.2,
+    maxTokens: 8000,
+    timeout: 120000,   // long generations need more time
+    maxRetries: 1
 })
 
 
@@ -31,6 +33,8 @@ export const getModel=async (agent)=>{
            return openrouter;  
         case "imageAnalyzer": 
            return gemini;
+        case "intent":
+            return groq;
     
         default:
             return groq;

@@ -14,7 +14,6 @@ function ChatArea() {
     dispatch(clearMessages())
     if (!selectedConversation) return
     if (selectedConversation.title === "New Chat") return
-
 const data=await getMessages(selectedConversation?._id)
 console.log(data)
       dispatch(setMessages(data))
