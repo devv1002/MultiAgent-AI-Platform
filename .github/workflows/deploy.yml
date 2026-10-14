@@ -1,0 +1,178 @@
+
+name: cortex ai deployment
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and push Gateway for ECS X86_64
+      - name: Build and push Gateway
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --push \
+            -f backend/gateway/Dockerfile \
+            -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/gateway:latest" \
+            backend
+
+      # Build and push Auth for ECS X86_64
+      - name: Build and push Auth
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --push \
+            -f backend/services/auth/Dockerfile \
+            -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:latest" \
+            backend
+
+      # Build and push Chat for ECS X86_64
+      - name: Build and push Chat
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --push \
+            -f backend/services/chat/Dockerfile \
+            -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/chat-service:latest" \
+            backend
+
+      # Build and push Agent for ECS X86_64
+      - name: Build and push Agent
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --push \
+            -f backend/services/agent/Dockerfile \
+            -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/agent-service:latest" \
+            backend
+
+      # Build and push Billing for ECS X86_64
+      - name: Build and push Billing
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --push \
+            -f backend/services/billing/Dockerfile \
+            -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/billing-service:latest" \
+            backend
+
+      # Deploy backend services
+      - name: Deploy Gateway
+        run: |
+          aws ecs update-service \
+            --cluster "${{ secrets.ECS_CLUSTER }}" \
+            --service "${{ secrets.GATEWAY_SERVICE }}" \
+            --force-new-deployment
+
+      - name: Deploy Auth
+        run: |
+          aws ecs update-service \
+            --cluster "${{ secrets.ECS_CLUSTER }}" \
+            --service "${{ secrets.AUTH_SERVICE }}" \
+            --force-new-deployment
+
+      - name: Deploy Chat
+        run: |
+          aws ecs update-service \
+            --cluster "${{ secrets.ECS_CLUSTER }}" \
+            --service "${{ secrets.CHAT_SERVICE }}" \
+            --force-new-deployment
+
+      - name: Deploy Agent
+        run: |
+          aws ecs update-service \
+            --cluster "${{ secrets.ECS_CLUSTER }}" \
+            --service "${{ secrets.AGENT_SERVICE }}" \
+            --force-new-deployment
+
+      - name: Deploy Billing
+        run: |
+          aws ecs update-service \
+            --cluster "${{ secrets.ECS_CLUSTER }}" \
+            --service "${{ secrets.BILLING_SERVICE }}" \
+            --force-new-deployment
+
+      # Wait for ECS to stabilize before completing backend deployment
+      - name: Wait for backend services to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster "${{ secrets.ECS_CLUSTER }}" \
+            --services \
+              "${{ secrets.GATEWAY_SERVICE }}" \
+              "${{ secrets.AUTH_SERVICE }}" \
+              "${{ secrets.CHAT_SERVICE }}" \
+              "${{ secrets.AGENT_SERVICE }}" \
+              "${{ secrets.BILLING_SERVICE }}"
+
+  deploy-frontend:
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload frontend to S3
+        run: |
+          aws s3 sync \
+            frontend/dist \
+            "s3://${{ secrets.S3_BUCKET }}" \
+            --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"
