@@ -122,20 +122,32 @@ jobs:
             --service "${{ secrets.BILLING_SERVICE }}" \
             --force-new-deployment
 
-            # Diagnose ECS services before waiting
+            
+      # Diagnose ECS services before waiting
       - name: Diagnose ECS services
         if: always()
+        env:
+          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER }}
+          GATEWAY_SERVICE_NAME: ${{ secrets.GATEWAY_SERVICE }}
+          AUTH_SERVICE_NAME: ${{ secrets.AUTH_SERVICE }}
+          CHAT_SERVICE_NAME: ${{ secrets.CHAT_SERVICE }}
+          AGENT_SERVICE_NAME: ${{ secrets.AGENT_SERVICE }}
+          BILLING_SERVICE_NAME: ${{ secrets.BILLING_SERVICE }}
         run: |
-          aws ecs describe-services \
-            --cluster "${{ secrets.ECS_CLUSTER }}" \
-            --services \
-              "${{ secrets.GATEWAY_SERVICE }}" \
-              "${{ secrets.AUTH_SERVICE }}" \
-              "${{ secrets.CHAT_SERVICE }}" \
-              "${{ secrets.AGENT_SERVICE }}" \
-              "${{ secrets.BILLING_SERVICE }}" \
-            --query 'services[].{Name:serviceName,Status:status,Desired:desiredCount,Running:runningCount,Pending:pendingCount,Events:events[0:5].message}' \
-            --output table
+          for SERVICE in \
+            "$GATEWAY_SERVICE_NAME" \
+            "$AUTH_SERVICE_NAME" \
+            "$CHAT_SERVICE_NAME" \
+            "$AGENT_SERVICE_NAME" \
+            "$BILLING_SERVICE_NAME"
+          do
+            echo "========== Checking ECS service =========="
+            aws ecs describe-services \
+              --cluster "$ECS_CLUSTER_NAME" \
+              --services "$SERVICE" \
+              --query 'services[0].{Name:serviceName,Desired:desiredCount,Running:runningCount,Pending:pendingCount,Events:events[0:3].message}' \
+              --output json
+          done
 
       # Wait for ECS to stabilize before completing backend deployment
       - name: Wait for backend services to stabilize
