@@ -164,7 +164,7 @@ function SideBar() {
             </button>
           </div>
 
-          {conversations.length == 0
+          {conversations?.length == 0
             ?
             <div className='px-5 pt-4 pb-1.5 text-[10.5px] font-semibold uppercase tracking-widest text-slate-600'>
               No Recent Conversations
@@ -177,7 +177,7 @@ function SideBar() {
             )}
 
           <div className='flex-1 overflow-y-auto px-2.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pt-5'>
-            {conversations.map((conv, i) => {
+            {conversations?.map((conv, i) => {
               const isActive = selectedConversation?._id == conv?._id
               return (
                 <div
