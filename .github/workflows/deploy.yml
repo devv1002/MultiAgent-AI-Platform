@@ -122,6 +122,21 @@ jobs:
             --service "${{ secrets.BILLING_SERVICE }}" \
             --force-new-deployment
 
+            # Diagnose ECS services before waiting
+      - name: Diagnose ECS services
+        if: always()
+        run: |
+          aws ecs describe-services \
+            --cluster "${{ secrets.ECS_CLUSTER }}" \
+            --services \
+              "${{ secrets.GATEWAY_SERVICE }}" \
+              "${{ secrets.AUTH_SERVICE }}" \
+              "${{ secrets.CHAT_SERVICE }}" \
+              "${{ secrets.AGENT_SERVICE }}" \
+              "${{ secrets.BILLING_SERVICE }}" \
+            --query 'services[].{Name:serviceName,Status:status,Desired:desiredCount,Running:runningCount,Pending:pendingCount,Events:events[0:5].message}' \
+            --output table
+
       # Wait for ECS to stabilize before completing backend deployment
       - name: Wait for backend services to stabilize
         run: |
