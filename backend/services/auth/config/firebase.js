@@ -1,9 +1,12 @@
 import { cert, initializeApp } from "firebase-admin";
-import { createRequire } from "module";
 
-const require = createRequire(import.meta.url);
+const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
 
-const serviceAccount = require("../serviceAccountKey.json");
+if (!serviceAccountJson) {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is missing");
+}
+
+const serviceAccount = JSON.parse(serviceAccountJson);
 
 export const app = initializeApp({
     credential: cert(serviceAccount)
