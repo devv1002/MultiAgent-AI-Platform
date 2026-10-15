@@ -122,7 +122,7 @@ jobs:
             --service "${{ secrets.BILLING_SERVICE }}" \
             --force-new-deployment
 
-            
+
       # Diagnose ECS services before waiting
       - name: Diagnose ECS services
         if: always()
@@ -150,16 +150,70 @@ jobs:
           done
 
       # Wait for ECS to stabilize before completing backend deployment
-      - name: Wait for backend services to stabilize
+      
+      # Check ECS rollout state and identify any service that is stuck
+      - name: Verify backend ECS deployments
+        shell: bash
+        env:
+          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER }}
+          GATEWAY_SERVICE_NAME: ${{ secrets.GATEWAY_SERVICE }}
+          AUTH_SERVICE_NAME: ${{ secrets.AUTH_SERVICE }}
+          CHAT_SERVICE_NAME: ${{ secrets.CHAT_SERVICE }}
+          AGENT_SERVICE_NAME: ${{ secrets.AGENT_SERVICE }}
+          BILLING_SERVICE_NAME: ${{ secrets.BILLING_SERVICE }}
         run: |
-          aws ecs wait services-stable \
-            --cluster "${{ secrets.ECS_CLUSTER }}" \
-            --services \
-              "${{ secrets.GATEWAY_SERVICE }}" \
-              "${{ secrets.AUTH_SERVICE }}" \
-              "${{ secrets.CHAT_SERVICE }}" \
-              "${{ secrets.AGENT_SERVICE }}" \
-              "${{ secrets.BILLING_SERVICE }}"
+          SERVICES=(
+            "$GATEWAY_SERVICE_NAME"
+            "$AUTH_SERVICE_NAME"
+            "$CHAT_SERVICE_NAME"
+            "$AGENT_SERVICE_NAME"
+            "$BILLING_SERVICE_NAME"
+          )
+
+          for ATTEMPT in $(seq 1 24); do
+            ALL_STABLE=true
+
+            echo "===== ECS check $ATTEMPT/24 ====="
+
+            for SERVICE in "${SERVICES[@]}"; do
+              RESULT=$(aws ecs describe-services \
+                --cluster "$ECS_CLUSTER_NAME" \
+                --services "$SERVICE" \
+                --query 'services[0].{Name:serviceName,Desired:desiredCount,Running:runningCount,Pending:pendingCount,Deployments:deployments[*].{Status:status,Rollout:rolloutState,Desired:desiredCount,Running:runningCount}}' \
+                --output json)
+
+              echo "$RESULT"
+
+              DESIRED=$(echo "$RESULT" | jq -r '.Desired // 0')
+              RUNNING=$(echo "$RESULT" | jq -r '.Running // 0')
+              PENDING=$(echo "$RESULT" | jq -r '.Pending // 0')
+              DEPLOYMENT_COUNT=$(echo "$RESULT" | jq '.Deployments | length')
+              PRIMARY_ROLLOUT=$(echo "$RESULT" | jq -r '[.Deployments[] | select(.Status == "PRIMARY")][0].Rollout // "UNKNOWN"')
+
+              if [[ "$DESIRED" -ne "$RUNNING" ||
+                    "$PENDING" -ne 0 ||
+                    "$DEPLOYMENT_COUNT" -ne 1 ||
+                    "$PRIMARY_ROLLOUT" != "COMPLETED" ]]; then
+                ALL_STABLE=false
+                echo "::warning::Service $SERVICE is not stable yet."
+              fi
+            done
+
+            if [[ "$ALL_STABLE" == "true" ]]; then
+              echo "All five ECS services are stable."
+              exit 0
+            fi
+
+            if [[ "$ATTEMPT" -lt 24 ]]; then
+              echo "Waiting 15 seconds before checking again..."
+              sleep 15
+            fi
+          done
+
+          echo "::error::ECS deployments did not stabilize within 6 minutes."
+          echo "Review the service deployment details printed above."
+          exit 1
+
 
   deploy-frontend:
     needs: deploy-backend
