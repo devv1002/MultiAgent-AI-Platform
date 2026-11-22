@@ -1,69 +1,104 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 dotenv.config();
 
 const isProduction = process.env.NODE_ENV === "production";
-const explicitProvider = (process.env.STORAGE_PROVIDER || "").toLowerCase();
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Determine and validate storage provider
-let activeProvider;
-
-if (explicitProvider === "aws") {
-    // Explicit opt-in for legacy AWS S3
-    activeProvider = "aws";
-    console.log("[Storage] Explicit AWS S3 legacy provider selected.");
-} else if (process.env.R2_ACCESS_KEY_ID && (process.env.R2_ACCOUNT_ID || process.env.R2_ENDPOINT)) {
-    // Cloudflare R2 is configured
-    activeProvider = "r2";
-} else if (isProduction) {
-    // In production, Cloudflare R2 is required unless explicitly opted into legacy AWS
+// In production, Supabase Storage credentials are strictly required
+if (isProduction && (!supabaseUrl || !supabaseKey)) {
     throw new Error(
-        "Production Configuration Error: Cloudflare R2 storage credentials are required in production " +
-        "(R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME). " +
-        "Silent fallback to AWS S3 is disabled to prevent accidental AWS billing. " +
-        "To explicitly use AWS S3 as a legacy fallback, set STORAGE_PROVIDER=aws."
+        "Production Configuration Error: Supabase Storage credentials are required in production " +
+        "(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_BUCKET_NAME). " +
+        "Silent fallback to AWS S3 / Cloudflare R2 is disabled."
     );
-} else if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_KEY) {
-    // Non-production fallback only
-    activeProvider = "aws";
-    console.warn("[Storage Warning] Using AWS S3 fallback in non-production environment.");
-} else {
-    // Development default when no storage credentials are configured
-    activeProvider = "r2";
 }
 
-let clientConfig;
-let bucketName;
+// Initialize Supabase client with service_role key to manage private bucket
+export const supabase = (supabaseUrl && supabaseKey)
+    ? createClient(supabaseUrl, supabaseKey, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false
+        }
+    })
+    : null;
 
-if (activeProvider === "r2") {
-    const endpoint = process.env.R2_ENDPOINT || (
-        process.env.R2_ACCOUNT_ID
-            ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
-            : undefined
-    );
-
-    clientConfig = {
-        region: "auto",
-        endpoint: endpoint,
-        credentials: {
-            accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
-            secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
-        },
-    };
-    bucketName = process.env.R2_BUCKET_NAME;
-} else {
-    clientConfig = {
-        region: process.env.AWS_REGION || "ap-southeast-2",
-        credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-            secretAccessKey: process.env.AWS_SECRET_KEY || "",
-        },
-    };
-    bucketName = process.env.AWS_BUCKET_NAME;
-}
-
-export const s3 = new S3Client(clientConfig);
-export const BUCKET_NAME = bucketName;
-export const STORAGE_PROVIDER = activeProvider;
+export const BUCKET_NAME = process.env.SUPABASE_BUCKET_NAME || "cortexai-files";
+export const STORAGE_PROVIDER = "supabase";
 export const DEFAULT_PRESIGNED_EXPIRY = 15 * 60; // 15 minutes (900 seconds)
-export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "";
+
+/**
+ * Validate that a storage key is a secure, flat object name.
+ * Prevents path traversal, injection, directory escapes, and malformed names.
+ *
+ * @param {string} key - Object key / filename to validate
+ * @returns {string} Validated filename
+ * @throws {Error} If key is invalid, unsafe, or violates naming constraints
+ */
+export const validateStorageKey = (key) => {
+    // 1. Check for null, undefined, or non-string
+    if (key === null || key === undefined || typeof key !== "string") {
+        throw new Error("Storage Key Error: Key must be a non-empty string");
+    }
+
+    const trimmed = key.trim();
+
+    // 2. Reject empty or whitespace-only keys
+    if (trimmed.length === 0) {
+        throw new Error("Storage Key Error: Key cannot be empty or whitespace-only");
+    }
+
+    // 3. Reject '.' and '..'
+    if (trimmed === "." || trimmed === "..") {
+        throw new Error("Storage Key Error: Relative path references ('.' or '..') are forbidden");
+    }
+
+    // 4. Reject null bytes (\0, %00)
+    if (trimmed.includes("\0") || /%00/i.test(trimmed)) {
+        throw new Error("Storage Key Error: Null bytes are forbidden in storage keys");
+    }
+
+    // 5. Reject forward slashes, backslashes, and path separators
+    if (trimmed.includes("/") || trimmed.includes("\\")) {
+        throw new Error("Storage Key Error: Forward slashes, backslashes, and path separators are forbidden. Keys must be flat object names.");
+    }
+
+    // 6. Reject path traversal and URL-encoded traversal/separators (../, ..\, %2e%2e, %2f, %5c)
+    if (
+        trimmed.includes("..") ||
+        /%2e%2e/i.test(trimmed) ||
+        /%2f/i.test(trimmed) ||
+        /%5c/i.test(trimmed)
+    ) {
+        throw new Error("Storage Key Error: Path traversal sequences are forbidden");
+    }
+
+    // 7. Check URL-decoded key to prevent double-encoding bypasses
+    try {
+        const decoded = decodeURIComponent(trimmed);
+        if (
+            decoded.includes("\0") ||
+            decoded.includes("/") ||
+            decoded.includes("\\") ||
+            decoded.includes("..") ||
+            decoded === "." ||
+            decoded === ".."
+        ) {
+            throw new Error("Storage Key Error: Encoded path traversal or separator sequences detected");
+        }
+    } catch (err) {
+        if (err.message?.includes("Storage Key Error")) throw err;
+        throw new Error("Storage Key Error: Malformed URL-encoded key");
+    }
+
+    // 8. Ensure keys are flat object names matching expected document naming convention
+    // e.g. pdf-<uuid>.pdf, ppt-<uuid>.pptx, image-<uuid>.png, test.pdf, etc.
+    const flatFilenameRegex = /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z0-9]+$/;
+    if (!flatFilenameRegex.test(trimmed)) {
+        throw new Error(`Storage Key Error: Key '${trimmed}' does not match expected flat document naming convention (e.g., pdf-<id>.pdf, ppt-<id>.pptx, image-<id>.png)`);
+    }
+
+    return trimmed;
+};

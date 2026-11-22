@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import { getModel } from "../config/llmModels.js"
 import { generatePpt } from "../utils/generatePpt.js"
 import { getFromS3 } from "../utils/getFromS3.js"
@@ -53,7 +54,7 @@ const buffer=await ppt.write({
     outputType:"nodebuffer"
 })
 
-const filename=`ppt-${Date.now()}.pptx`
+const filename = `ppt-${crypto.randomUUID()}.pptx`
 
 await uploadToS3(filename,buffer,"application/vnd.openxmlformats-officedocument.presentationml.presentation")
 const downloadUrl=await getFromS3(filename, 15 * 60)

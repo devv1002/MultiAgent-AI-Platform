@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import { getModel } from "../config/llmModels.js"
 import axios from "axios"
 import { uploadToS3 } from "../utils/uploadToS3.js"
@@ -42,7 +43,7 @@ const imageUrl=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt
 const imageRes=await axios.get(imageUrl,{responseType:"arraybuffer"})
 await deductCredits(state.userId,"vision")
 const buffer=Buffer.from(imageRes.data)
-const filename=`image-${Date.now()}.png`
+const filename = `image-${crypto.randomUUID()}.png`
 
 await uploadToS3(filename,buffer,"image/png")
 const downloadUrl=await getFromS3(filename, 15 * 60)

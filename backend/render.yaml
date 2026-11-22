@@ -40,23 +40,10 @@ services:
         sync: false
       - key: QDRANT_API_KEY
         sync: false
-      # Cloudflare R2 (Primary Object Storage)
-      - key: R2_ACCOUNT_ID
+      # Supabase Storage (Primary Object Storage)
+      - key: SUPABASE_URL
         sync: false
-      - key: R2_ACCESS_KEY_ID
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: R2_SECRET_ACCESS_KEY
-        sync: false
-      - key: R2_BUCKET_NAME
-        sync: false
-      - key: R2_PUBLIC_URL
-        sync: false
-      # AWS S3 (Backup Object Storage - optional fallback)
-      - key: AWS_REGION
-        sync: false
-      - key: AWS_ACCESS_KEY_ID
-        sync: false
-      - key: AWS_SECRET_KEY
-        sync: false
-      - key: AWS_BUCKET_NAME
+      - key: SUPABASE_BUCKET_NAME
         sync: false

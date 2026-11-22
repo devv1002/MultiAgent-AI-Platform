@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import { getModel } from "../config/llmModels.js"
 import { generatePdf } from "../utils/generatePdf.js"
 import { getFromS3 } from "../utils/getFromS3.js"
@@ -46,7 +47,7 @@ ${state.prompt}
         
         const pdfBuffer=await generatePdf(data)
 
-        const filename=`pdf-${Date.now()}.pdf`
+        const filename = `pdf-${crypto.randomUUID()}.pdf`
         await uploadToS3(filename,pdfBuffer,"application/pdf")
 
         const downloadUrl=await getFromS3(filename, 15 * 60)
