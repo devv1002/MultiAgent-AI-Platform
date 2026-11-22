@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createMultiDbModel } from "../../../shared/db/connect.js";
 
 const paymentSchema=new mongoose.Schema({
     userId:{
@@ -25,8 +26,23 @@ const paymentSchema=new mongoose.Schema({
         type:String,
         enum:["created","paid","failed"],
         default:"created"
-    }
+    },
+    settlementStatus:{
+        type:String,
+        enum:["pending","processing","completed","failed"],
+        default:"pending"
+    },
+    settledAt:Date,
+    settlementAttempts:{
+        type:Number,
+        default:0
+    },
+    lastSettlementAttemptAt:Date,
+    creditUpdateError: String
 },{timestamps:true})
 
-const Payment=mongoose.model("Payment",paymentSchema)
+paymentSchema.index({ status: 1, settlementStatus: 1 });
+
+
+const Payment = createMultiDbModel("billing", "Payment", paymentSchema);
 export default Payment

@@ -42,16 +42,28 @@ export const updateConversation=async (req,res) => {
   }
 }
 
+// Direct internal service function for message persistence
+export const saveMessageDirect = async ({ conversationId, role, content, images, artifacts }) => {
+    return await Message.create({
+        conversationId,
+        content,
+        role,
+        images,
+        artifacts
+    });
+};
+
+// Direct internal service function for message retrieval
+export const getMessagesDirect = async (conversationId) => {
+    return await Message.find({
+        conversationId
+    });
+};
+
 export const saveMessage=async (req,res) => {
     try {
         const {conversationId,role,content,images,artifacts}=req.body
-        const message=await Message.create({
-            conversationId,
-            content,
-            role,
-            images,
-            artifacts
-        })
+        const message = await saveMessageDirect({ conversationId, role, content, images, artifacts })
         return res.status(200).json(message)
     } catch (error) {
         return res.status(500).json({message:`save message error ${error}`})
@@ -60,10 +72,7 @@ export const saveMessage=async (req,res) => {
 
 export const getMessages=async (req,res) => {
     try {
-        
-        const messages=await Message.find({
-            conversationId:req.params.conversationId   
-        })
+        const messages = await getMessagesDirect(req.params.conversationId)
         return res.status(200).json(messages)
     } catch (error) {
         return res.status(500).json({message:`get messages error ${error}`})

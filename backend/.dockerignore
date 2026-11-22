@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Environment Files
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+
+# Service Accounts and Secrets
+*.pem
+*.key
+serviceAccountKey.json
+firebase-adminsdk*.json
+
+# Temporary and Upload Directories
+temp/
+**/temp/
+tmp/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Git and IDE metadata
+.git/
+.gitignore
+.DS_Store
+.vscode/
+.idea/
+
+# Build and Test Artifacts
+dist/
+build/
+coverage/

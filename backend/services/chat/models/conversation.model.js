@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createMultiDbModel } from "../../../shared/db/connect.js";
 
 const conversationSchema = new mongoose.Schema({
     title:{
@@ -12,5 +13,5 @@ const conversationSchema = new mongoose.Schema({
     timestamps:true
 })
 
-const Conversation = mongoose.model("Conversation",conversationSchema)
+const Conversation = createMultiDbModel("chat", "Conversation", conversationSchema)
 export default Conversation

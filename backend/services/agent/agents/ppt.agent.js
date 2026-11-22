@@ -56,7 +56,7 @@ const buffer=await ppt.write({
 const filename=`ppt-${Date.now()}.pptx`
 
 await uploadToS3(filename,buffer,"application/vnd.openxmlformats-officedocument.presentationml.presentation")
-const downloadUrl=await getFromS3(filename,24*60*60)
+const downloadUrl=await getFromS3(filename, 15 * 60)
 
 return {
     ...state,
@@ -66,7 +66,7 @@ return {
 
 📥 [Download PPT](${downloadUrl})
 
-_Link expires in 10 minutes._`
+_Link expires in 15 minutes._`
 }
 
     } catch (error) {

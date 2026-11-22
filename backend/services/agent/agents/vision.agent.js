@@ -45,7 +45,7 @@ const buffer=Buffer.from(imageRes.data)
 const filename=`image-${Date.now()}.png`
 
 await uploadToS3(filename,buffer,"image/png")
-const downloadUrl=await getFromS3(filename,24*60)
+const downloadUrl=await getFromS3(filename, 15 * 60)
 
 return {
     ...state,
@@ -54,7 +54,7 @@ return {
 
 📥 [Download Image](${downloadUrl})
 
-⏳ Link expires in 10 minutes.`
+⏳ Link expires in 15 minutes.`
 }
     } catch (error) {
        console.log(error)

@@ -49,7 +49,7 @@ ${state.prompt}
         const filename=`pdf-${Date.now()}.pdf`
         await uploadToS3(filename,pdfBuffer,"application/pdf")
 
-        const downloadUrl=await getFromS3(filename,24*60)
+        const downloadUrl=await getFromS3(filename, 15 * 60)
 
         return {
           ...state,
@@ -59,7 +59,7 @@ ${state.prompt}
 
 📥 [Download PDF](${downloadUrl})
 
-_Link expires in 10 minutes._`
+_Link expires in 15 minutes._`
         }
 
     } catch (error) {

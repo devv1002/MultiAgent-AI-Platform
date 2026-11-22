@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createMultiDbModel } from "../../../shared/db/connect.js";
 
 const userSchema=new mongoose.Schema({
     firebaseUid:{
@@ -20,11 +21,14 @@ const userSchema=new mongoose.Schema({
         type:Number,
         default:100
     },
-    planExpiresAt:Date
-
+    planExpiresAt:Date,
+    settledOrders:{
+        type:[String],
+        default:[]
+    }
 },{
     timestamps:true
 })
 
-const User=mongoose.model("User",userSchema)
+const User = createMultiDbModel("auth", "User", userSchema);
 export default User

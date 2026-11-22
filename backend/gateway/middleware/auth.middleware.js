@@ -11,6 +11,10 @@ const protect = async(req,res,next) => {
             return res.status(400).json({message:"session expired"})
         }
         req.user=JSON.parse(session)
+        // Propagate user ID for all downstream service controllers
+        if (req.user?.userId) {
+            req.headers["x-user-id"] = String(req.user.userId)
+        }
         next()
     } catch (error) {
         return res.status(500).json({message:`protect error ${error}`})
