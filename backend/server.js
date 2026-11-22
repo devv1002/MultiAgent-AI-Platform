@@ -23,6 +23,9 @@ import billingRouter from "./services/billing/routes/billing.route.js";
 const app = express();
 const port = process.env.PORT || 8000;
 
+// Trust reverse proxy (Render load balancer, Vercel edge rewrite proxy)
+app.set("trust proxy", 1);
+
 // CORS configuration supporting local dev, Vercel production, and Vercel preview deployments
 const isAllowedOrigin = (origin) => {
     if (!origin) return true; // Server-to-server or curl requests
@@ -48,7 +51,7 @@ app.use(cors({
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-user-id"]
+    allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-internal-service-key"]
 }));
 
 app.use(morgan("dev"));

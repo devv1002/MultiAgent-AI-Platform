@@ -40,7 +40,10 @@ console.log("IMAGE PROMPT:", prompt)
 
 const imageUrl=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`
 
-const imageRes=await axios.get(imageUrl,{responseType:"arraybuffer"})
+const imageRes = await axios.get(imageUrl, {
+    responseType: "arraybuffer",
+    timeout: 45000 // 45s timeout protects against hanging external Pollinations AI requests
+})
 await deductCredits(state.userId,"vision")
 const buffer=Buffer.from(imageRes.data)
 const filename = `image-${crypto.randomUUID()}.png`

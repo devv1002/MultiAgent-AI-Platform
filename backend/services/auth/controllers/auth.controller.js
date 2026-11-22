@@ -60,15 +60,33 @@ export const login = async (req, res) => {
     }
 }
 
-export const logOut = async (req,res) => {
+export const logOut = async (req, res) => {
     try {
-        const sessionId = req.cookies?.session
-        await redis.del(`session-${sessionId}`)
+        const sessionId = req.cookies?.session;
+        if (sessionId) {
+            try {
+                const sessionData = await redis.get(`session-${sessionId}`);
+                if (sessionData) {
+                    const parsed = JSON.parse(sessionData);
+                    if (parsed?.userId) {
+                        await redis.del(`user-session-${parsed.userId}`);
+                    }
+                }
+            } catch {
+                // Ignore session parsing errors during logout
+            }
+            await redis.del(`session-${sessionId}`);
+        }
 
-        res.clearCookie("session")
-        return res.status(200).json({message:"Logout successfully"});
+        res.clearCookie("session", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            path: "/"
+        });
+        return res.status(200).json({ message: "Logout successfully" });
     } catch (error) {
-        return res.status(200).json({message:`logout error ${error}`});
+        return res.status(500).json({ message: `logout error ${error.message || error}` });
     }
 }
 
