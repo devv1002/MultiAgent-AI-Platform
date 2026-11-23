@@ -1,4 +1,6 @@
-import pptxgen from "pptxgenjs"
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pptxgen = require("pptxgenjs");
 
 const COLORS = {
     primary: "2563EB",

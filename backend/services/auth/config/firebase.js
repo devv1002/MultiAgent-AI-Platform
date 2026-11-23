@@ -1,4 +1,4 @@
-import { cert, initializeApp, getApps } from "firebase-admin";
+import { cert, initializeApp, getApps } from "firebase-admin/app";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
