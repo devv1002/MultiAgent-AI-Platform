@@ -1,13 +1,10 @@
-import React from 'react'
-import { Coins, LogOut, Menu, MessageSquare, PanelLeftIcon, PanelRight, PenBoxIcon, PenSquare, Plus, User, X } from "lucide-react"
-import { useState } from 'react'
-import { useEffect } from 'react'
+import { Coins, LogOut, Menu, MessageSquare, PanelLeftIcon, PanelRight, PenSquare, Plus, User, X } from "lucide-react"
+import { useState, useEffect } from 'react'
 import { getConversations } from '../features/getConversations'
 import { useDispatch, useSelector } from 'react-redux'
-import { createConversation } from '../features/createConversation'
 import { clearMessages } from "../redux/messageSlice"
 
-import { addConversation, setConversations, setSelectedConversation } from '../redux/conversationSlice'
+import { setConversations, setSelectedConversation } from '../redux/conversationSlice'
 import logOut from '../features/logOut'
 import { setUserdata } from '../redux/userSlice'
 import BillingDrawer from './BillingDrawer'
@@ -28,21 +25,7 @@ function SideBar() {
       dispatch(setConversations(data))
     }
     getConv()
-  }, [userData?._id])
-
-  const handleCreateConversation = async () => {
-    const data = await createConversation()
-    dispatch(addConversation(data))
-  }
-
-  const handleNewChat = async () => {
-    dispatch(clearMessages())
-
-    const conv = await createConversation()
-
-    dispatch(addConversation(conv))
-    dispatch(setSelectedConversation(conv))
-  }
+  }, [userData?._id, dispatch])
 
   if (collapsed && window.innerWidth >= 1024) {
     return (
@@ -63,6 +46,7 @@ function SideBar() {
             const isActive = selectedConversation?._id == conv?._id
             return (
               <div
+                key={conv?._id || `conv-c-${i}`}
                 onClick={() => {
                   dispatch(setSelectedConversation(conv));
                   setMobileOpen(false);
@@ -181,6 +165,7 @@ function SideBar() {
               const isActive = selectedConversation?._id == conv?._id
               return (
                 <div
+                  key={conv?._id || `conv-${i}`}
                   onClick={() => dispatch(setSelectedConversation(conv))}
                   className={`flex items-center gap-2.5 cursor-pointer mb-0.5 px-3 py-2.5 rounded-[10px] border transition-colors duration-150
           ${isActive ? "bg-indigo-500/10 border-indigo-500/[0.18]"

@@ -1,19 +1,17 @@
-import { Code2, FileText, Globe, ImageIcon, MessageSquare, Mic, MicOff, Paperclip, Presentation, Send, X, Zap } from 'lucide-react'
-import React, { useState } from 'react'
+import { Code2, FileText, Globe, ImageIcon, MessageSquare, Mic, Paperclip, Presentation, Send, X, Zap } from 'lucide-react'
+import { useState, useRef } from 'react'
 import sendMessage from '../features/sendMessage'
 import { useDispatch, useSelector } from 'react-redux'
 import { addMessage , setIsLoading, setArtifacts} from '../redux/messageSlice'
 import { createConversation} from '../features/createConversation'
 import { addConversation, setConvTitle, setSelectedConversation } from '../redux/conversationSlice'
 import { updateConversation } from '../features/updateConversation'
-import { useRef } from 'react'
-
 
 function ChatInput() {
   const [value, setValue] = useState("")
   const [selectedAgent, setSelectedAgent] = useState("Auto")
   const { selectedConversation } = useSelector(state => state.conversation)
-  const { messages, isLoading } = useSelector(state => state.message)
+  const { isLoading } = useSelector(state => state.message)
   const [selectedFile, setSelectedFile] = useState(null)
   const fileRef = useRef(null)
 
@@ -32,10 +30,6 @@ function ChatInput() {
     if (conversation.title == "New Chat") {
       await updateConversation({ id: conversation?._id, title: value.trim() })
       dispatch(setConvTitle({ conversationId: conversation?._id, title: value.slice(0, 40) }))
-    }
-
-    const payload = {
-      prompt: value.trim(), conversationId: conversation?._id, agent: selectedAgent.toLowerCase()
     }
 
     console.log(selectedFile)
@@ -112,6 +106,7 @@ function ChatInput() {
             const Icon = agent.icon
             return (
               <div
+                key={agent.id}
                 onClick={() => setSelectedAgent(agent.label)}
                 className={`
             flex-shrink-0

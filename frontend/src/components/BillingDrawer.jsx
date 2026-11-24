@@ -1,11 +1,12 @@
-import React from 'react'
 import { AnimatePresence, motion } from "motion/react"
 import { Crown, X } from 'lucide-react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { createOrder } from '../features/createOrder'
 import { verifyPayment } from '../features/verifyPayment'
+import { setUserdata } from '../redux/userSlice'
 
 function BillingDrawer({ open, onClose }) {
+    const dispatch = useDispatch()
     const { userData } = useSelector(state => state.user)
 
     const handleUpgrade = async (plan) => {
@@ -20,10 +21,11 @@ function BillingDrawer({ open, onClose }) {
                 order_id: data?.order?.id,
                 handler: async (response) => {
                     try {
-                        const data = await verifyPayment(response)
-                        console.log("PAYMENT VERIFIED:", data)
-
-
+                        const verifiedData = await verifyPayment(response)
+                        console.log("PAYMENT VERIFIED:", verifiedData)
+                        if (verifiedData?.user) {
+                            dispatch(setUserdata(verifiedData.user))
+                        }
                     } catch (error) {
                         console.log("PAYMENT ERROR:", error)
                     }
@@ -88,7 +90,7 @@ function BillingDrawer({ open, onClose }) {
                             <div className='mt-5'>
                                 <div className='flex justify-between text-xs text-slate-400 mb-2'>
                                     <span>Credits</span>
-                                    <span>{userData.credits || 0}/{userData.totalCredits || 0}</span>
+                                    <span>{userData?.credits || 0}/{userData?.totalCredits || 0}</span>
                                 </div>
 
                                 <div className='h-2 rounded-full bg-white/10 overflow-hidden'>

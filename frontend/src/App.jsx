@@ -1,26 +1,27 @@
-import { auth, googleProvider } from '../utils/firebase'
-import api from '../utils/axios'
-import Home from './pages/Home'
-import { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
-import { setUserdata } from './redux/userSlice'
+import Home from './pages/Home';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { setUserdata } from './redux/userSlice';
+import getCurrentUser from './features/getCurrentUser';
 
 function App() {
+  const dispatch = useDispatch();
 
-const dispatch = useDispatch()
-useEffect(() => {
-  const getUser = async() => {
-    const data = await getCurrentUser()
-    dispatch(setUserdata(data))
-  }
-  getUser
-},[])
+  useEffect(() => {
+    const getUser = async () => {
+      const data = await getCurrentUser();
+      if (data) {
+        dispatch(setUserdata(data));
+      }
+    };
+    getUser();
+  }, [dispatch]);
 
   return (
     <>
-    <Home/>
+      <Home />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

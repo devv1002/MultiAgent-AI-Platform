@@ -1,11 +1,10 @@
-import { Check, Copy, ExternalLink, FileX2, X } from 'lucide-react'
-import React from 'react'
+import { Check, Copy, ExternalLink, X } from 'lucide-react'
 import { useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-function MessageBubble({ role, content, images }) {
+function MessageBubble({ role, content, images = [] }) {
   const isUser = role === "user"
   const [lightBox, setLightBox] = useState(null)
   const [copiedCode, setCopiedCode] = useState("")
@@ -31,7 +30,7 @@ function MessageBubble({ role, content, images }) {
         }`}>
 
 
-        {images.length > 0 && (
+        {Array.isArray(images) && images.length > 0 && (
           <div className='flex flex-wrap gap-3 mt-4'>
             {images.map((img, i) => (
               <img

@@ -1,5 +1,5 @@
 import { signInWithPopup } from 'firebase/auth'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { auth, googleProvider } from '../../utils/firebase'
 import api from '../../utils/axios'
 import { FcGoogle } from "react-icons/fc";
@@ -32,7 +32,7 @@ function Home() {
 
                 dispatch(setUserdata(data));
 
-            } catch (error) {
+            } catch {
 
                 console.log("No active session");
 
